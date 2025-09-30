@@ -2,10 +2,10 @@
 
 import { Suspense, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { Route } from "next"; // ← typed routes
+import type { Route } from "next";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const dynamic = "force-dynamic"; // ✅ keep
+// ❌ remove: export const revalidate = 0;
 
 export default function LoginPage() {
   return (
