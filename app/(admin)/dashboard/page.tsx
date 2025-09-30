@@ -1,23 +1,22 @@
-import NavLayout from "@/components/NavLayout"; 
+// app/(admin)/dashboard/page.tsx
+import NavLayout from "@/components/NavLayout";
 import StableTime from "@/components/StableTime";
 import { prisma } from "@/lib/prisma";
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
-
-// Define the RecentDownline type outside the component
-type RecentDownline = {
-  id: string;
-  fullName: string;
-  Project: { name: string };
-  Package: { name: string };
-  createdAt: Date;
-};
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+type RecentRow = {
+  id: string;
+  fullName: string;
+  projectName: string;
+  pkgName: string;
+  createdAtISO: string;
+};
+
 export default async function Dashboard() {
-  // Query DB on the server (no self-fetch)
-  const [projects, packages, downlines, recent] = await Promise.all([
+  // server-side queries (no self-fetch)
+  const [projects, packages, downlines, recentRaw] = await Promise.all([
     prisma.project.count({ where: { deleted: false } }),
     prisma.package.count({ where: { deleted: false } }),
     prisma.downline.count(),
@@ -28,38 +27,49 @@ export default async function Dashboard() {
     }),
   ]);
 
-  const data = {
-    totals: { projects, packages, downlines },
-    recent: recent.map((r: RecentDownline) => ({
-      id: r.id,
-      fullName: r.fullName,
-      project: r.Project.name,
-      package: r.Package.name,
-      createdAt: r.createdAt.toISOString(),
-    })),
-  };
+  const recent: RecentRow[] = recentRaw.map((r) => ({
+    id: r.id,
+    fullName: r.fullName,
+    projectName: r.Project.name,
+    pkgName: r.Package.name, // renamed from "package" -> "pkgName"
+    createdAtISO: r.createdAt.toISOString(), // pass ISO string to client comp
+  }));
 
   return (
     <NavLayout>
+      <div className="g-title mb-4">Dashboard</div>
+
       <div className="grid md:grid-cols-3 gap-4">
         <div className="g-card">
           <div className="g-sub">Projects</div>
-          <div className="g-title">{data.totals.projects}</div>
+          <div className="g-title">{projects}</div>
         </div>
         <div className="g-card">
           <div className="g-sub">Packages</div>
-          <div className="g-title">{data.totals.packages}</div>
+          <div className="g-title">{packages}</div>
         </div>
         <div className="g-card">
-          {data.recent.map((r: { id: Key | null | undefined; fullName: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; project: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; package: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; createdAt: string; }) => (
-            <div key={r.id} className="g-table-row py-2 flex justify-between">
-              <div>
-                {r.fullName} · <span className="g-sub">{r.project} / {r.package}</span>
-              </div>
-              <div className="g-sub"><StableTime iso={r.createdAt} /></div>
-            </div>
-          ))}
+          <div className="g-sub">Downlines</div>
+          <div className="g-title">{downlines}</div>
         </div>
+      </div>
+
+      <div className="g-card mt-6">
+        <div className="font-semibold mb-2">Recent registrations</div>
+        {recent.length === 0 && <div className="g-sub">No recent activity.</div>}
+        {recent.map((r) => (
+          <div key={r.id} className="g-table-row py-2 flex justify-between">
+            <div>
+              {r.fullName} ·{" "}
+              <span className="g-sub">
+                {r.projectName} / {r.pkgName}
+              </span>
+            </div>
+            <div className="g-sub">
+              <StableTime iso={r.createdAtISO} />
+            </div>
+          </div>
+        ))}
       </div>
     </NavLayout>
   );
