@@ -1,0 +1,271 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================== */
+/* THEME TOKENS          */
+/* ===================== */
+:root{
+  --primary: hsl(215 100% 55%);
+  --surface: #0f1115;
+  --surface-1:#141824;
+  --surface-2:#1a2030;
+  --text:#e8ecf3;
+  --text-muted:#9aa4b2;
+  --border:#273045;
+  --nav-bg:rgba(15,17,21,.65);
+  --card-glow: 0 10px 35px rgba(22, 30, 45, 0.55);
+  --ring: 0 0 0 2px color-mix(in oklab, var(--primary) 35%, transparent);
+}
+:root[data-theme="orange"]{ --primary:hsl(30 100% 55%); }
+:root[data-theme="cyan"]{ --primary:hsl(190 100% 45%); }
+:root[data-theme="magenta"]{ --primary:hsl(325 90% 55%); }
+:root[data-theme="yellow"]{ --primary:hsl(50 100% 50%); }
+:root[data-theme="bw"]{ --primary:hsl(0 0% 100%); }
+
+.dark{
+  --surface:#0b0d10;
+  --surface-1:#10131c;
+  --surface-2:#161c2a;
+  --text:#e9edf4;
+  --text-muted:#9aa4b2;
+  --border:#23304a;
+  --nav-bg:rgba(10,12,16,.65);
+}
+
+/* ===================== */
+/* BASE                  */
+/* ===================== */
+html,body{ background:var(--surface); color:var(--text); }
+a{ color:var(--text); }
+.container-max{ @apply max-w-6xl mx-auto px-4; }
+
+/* Subtle starry vignette background (like the inspiration’s depth) */
+body::before{
+  content:"";
+  position:fixed; inset:0; pointer-events:none;
+  background:
+    radial-gradient(1200px 600px at 75% -10%, color-mix(in oklab, var(--primary) 8%, transparent), transparent 60%),
+    radial-gradient(800px 400px at -10% 80%, rgba(255,255,255,.05), transparent 60%);
+  mix-blend-mode:screen; opacity:.4;
+}
+
+/* Scrollbars */
+*{ scrollbar-width:thin; scrollbar-color: color-mix(in oklab, var(--primary) 40%, #2a2f3d) transparent; }
+*::-webkit-scrollbar{ height:8px; width:8px; }
+*::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, color-mix(in oklab, var(--primary) 60%, #2a2f3d), #2a2f3d); border-radius:999px; }
+
+/* ===================== */
+/* NAV / HAMBURGER       */
+/* ===================== */
+.app-nav{
+  @apply sticky top-0 z-50 backdrop-blur border-b;
+  background:var(--nav-bg);
+  border-color:var(--border);
+  box-shadow: 0 6px 30px rgba(0,0,0,.25);
+}
+
+/* hamburger */
+.hamburger{
+  --bar-h:2px; --gap:6px; --w:22px;
+  width:var(--w); height: calc(var(--bar-h)*3 + var(--gap)*2);
+  position: relative; display:inline-block; cursor:pointer;
+}
+.hamburger span{
+  position:absolute; left:0; right:0; height:var(--bar-h);
+  background:var(--text); border-radius:999px; transition:transform .35s ease, top .35s ease, opacity .25s ease;
+  box-shadow:0 1px 0 rgba(0,0,0,.25);
+}
+.hamburger span:nth-child(1){ top:0; }
+.hamburger span:nth-child(2){ top:calc(var(--bar-h) + var(--gap)); }
+.hamburger span:nth-child(3){ top:calc(var(--bar-h)*2 + var(--gap)*2); }
+.hamburger[aria-expanded="true"] span:nth-child(1){
+  top:calc(var(--bar-h) + var(--gap)); transform:rotate(45deg);
+}
+.hamburger[aria-expanded="true"] span:nth-child(2){ opacity:0; }
+.hamburger[aria-expanded="true"] span:nth-child(3){
+  top:calc(var(--bar-h) + var(--gap)); transform:rotate(-45deg);
+}
+
+/* mobile menu container (toggle with .is-open) */
+.mobile-menu{
+  display:none; overflow:hidden; border-top:1px solid var(--border);
+  background:color-mix(in oklab, var(--surface-1) 92%, transparent);
+  animation: menuReveal .35s ease both;
+}
+.mobile-menu.is-open{ display:block; }
+@keyframes menuReveal{
+  from{ opacity:0; transform: translateY(-6px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+
+/* ===================== */
+/* REUSABLE UI           */
+/* ===================== */
+.g-card{
+  @apply rounded-2xl p-5 border shadow;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--surface-1) 92%, transparent), var(--surface-2));
+  border-color:var(--border);
+  box-shadow: var(--card-glow);
+  position:relative; isolation:isolate;
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease;
+  animation: cardIn .45s var(--card-delay,0ms) cubic-bezier(.2,.8,.2,1) both;
+}
+.g-card::after{ /* glossy diagonal */
+  content:""; position:absolute; inset:-1px;
+  background: linear-gradient(120deg, rgba(255,255,255,.06), transparent 35%, transparent 65%, rgba(255,255,255,.04));
+  border-radius:inherit; pointer-events:none; mix-blend-mode:overlay;
+}
+.g-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 18px 55px rgba(0,0,0,.45), 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent) inset;
+  border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
+}
+
+.g-btn{
+  @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 font-medium border;
+  border-color:var(--border);
+  background: linear-gradient(100deg, color-mix(in oklab, var(--primary) 18%, transparent), transparent);
+  transition: filter .2s ease, transform .2s ease, box-shadow .2s ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+}
+.g-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+.g-btn:active{ transform: translateY(0); }
+
+.g-outline{ @apply border rounded-xl; border-color:var(--border); }
+.g-input{
+  @apply w-full rounded-xl px-4 py-2;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+.g-input:focus{
+  outline:none; border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  box-shadow: var(--ring);
+}
+
+.g-table{ @apply w-full text-sm; }
+.g-table-row{ @apply border-b; border-color:var(--border); }
+.g-title{ @apply text-2xl font-semibold; color:var(--text); }
+.g-sub{ @apply text-sm; color:var(--text-muted); }
+
+/* KPI / stat dots reminiscent of the template */
+.stat-dot{
+  width:8px; height:8px; border-radius:999px;
+  background: color-mix(in oklab, var(--primary) 70%, #0a0f1a);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+/* mini line “spark” animation for charts */
+.sparkline{
+  position:relative;
+  --dash: 450;
+  stroke-dasharray: var(--dash);
+  stroke-dashoffset: var(--dash);
+  animation: lineDraw 1.2s .1s cubic-bezier(.37,.01,.17,.99) forwards;
+  filter: drop-shadow(0 4px 14px color-mix(in oklab, var(--primary) 45%, transparent));
+}
+@keyframes lineDraw{ to{ stroke-dashoffset: 0; } }
+
+/* ===================== */
+/* DASHBOARD LAYOUT      */
+/* ===================== */
+.grid-dashboard{
+  display:grid; gap:16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px){
+  .grid-dashboard{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (min-width: 1024px){
+  .grid-dashboard{ grid-template-columns: 2fr 1fr; }
+}
+
+/* Sidebar behavior */
+.sidebar{
+  width: 260px; flex: 0 0 260px; border-right:1px solid var(--border);
+  background:linear-gradient(180deg, var(--surface-1), color-mix(in oklab, var(--surface-2) 85%, transparent));
+}
+@media (max-width: 1024px){
+  .sidebar{ display:none; }
+  .sidebar.is-open{
+    display:block; position:fixed; inset:0 35% 0 0; z-index:60;
+    border-right:1px solid var(--border);
+    animation: slideIn .35s ease both;
+  }
+}
+@keyframes slideIn{
+  from{ transform:translateX(-16px); opacity:0; }
+  to{ transform:translateX(0); opacity:1; }
+}
+
+/* Top stat cards grid */
+.stats-grid{
+  display:grid; gap:12px;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+@media (min-width:768px){
+  .stats-grid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+
+/* ===================== */
+/* ANIMATIONS            */
+/* ===================== */
+@keyframes cardIn{
+  from{ opacity:0; transform: translateY(8px) scale(.98); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+@keyframes pulseGlow{
+  0%, 100%{ box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 24%, transparent); }
+  50%{ box-shadow: 0 0 0 6px color-mix(in oklab, var(--primary) 0%, transparent); }
+}
+.glow{
+  animation: pulseGlow 2.6s ease-in-out infinite;
+}
+
+/* shimmering skeleton */
+.skeleton{
+  position:relative; overflow:hidden; background: #1b2130;
+}
+.skeleton::after{
+  content:""; position:absolute; inset:0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.07) 50%, transparent 80%);
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer{ from{ transform: translateX(-100%);} to{ transform: translateX(100%);} }
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce){
+  .g-card, .sparkline, .glow, .skeleton::after{ animation:none !important; }
+  .hamburger span{ transition:none; }
+}
+
+/* ===================== */
+/* UTIL EXTRAS           */
+/* ===================== */
+.badge{
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.2rem .55rem; border-radius:999px; font-size:.72rem;
+  background: color-mix(in oklab, var(--primary) 18%, transparent);
+  border:1px solid color-mix(in oklab, var(--primary) 35%, var(--border));
+}
+.muted{ color:var(--text-muted); }
+.hr{ height:1px; background:var(--border); width:100%; opacity:.75; border-radius:999px; }
+.app-nav .nav-link{ opacity:.85; transition: opacity .15s ease, color .2s ease; }
+.app-nav .nav-link:hover{ opacity:1; color: color-mix(in oklab, var(--primary) 45%, var(--text)); }
+
+/* --- Lucide icon fix: make icons visible on dark glass buttons --- */
+.icon-btn{
+  @apply h-9 w-9 p-0 inline-flex items-center justify-center rounded-xl;
+  color: var(--text);            /* lucide uses currentColor */
+}
+.icon-btn svg,
+.icon-btn [data-lucide]{
+  width: 18px;
+  height: 18px;
+  stroke: var(--text);
+  stroke-width: 2;
+  display: block;                /* prevent collapse */
+}
+.icon-btn[disabled]{ opacity:.5; pointer-events:none; }

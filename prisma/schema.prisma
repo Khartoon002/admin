@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  theme        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Project {
+  id              String       @id @default(cuid())
+  name            String
+  slug            String       @unique
+  description     String?
+  status          String       @default("active")
+  defaultWhatsApp String?
+  taskerTag       String?
+  createdById     String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  archivedAt      DateTime?
+  deleted         Boolean      @default(false)
+  bots            Bot[]
+  Downline        Downline[]
+  packages        Package[]
+  PersonLink      PersonLink[]
+}
+
+model Package {
+  id          String       @id @default(cuid())
+  projectId   String
+  name        String
+  slug        String
+  description String?
+  status      String       @default("active")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  archivedAt  DateTime?
+  deleted     Boolean      @default(false)
+  downlines   Downline[]
+  project     Project      @relation(fields: [projectId], references: [id])
+  links       PersonLink[]
+}
+
+model PersonLink {
+  id               String    @id @default(cuid())
+  token            String    @unique
+  projectId        String
+  packageId        String
+  forName          String?
+  forPhone         String?
+  oneTime          Boolean   @default(true)
+  consumedAt       DateTime?
+  usedByDownlineId String?
+  createdAt        DateTime  @default(now())
+  package          Package   @relation(fields: [packageId], references: [id])
+  project          Project   @relation(fields: [projectId], references: [id])
+}
+
+model Downline {
+  id            String   @id @default(cuid())
+  projectId     String
+  packageId     String
+  fullName      String
+  username      String   @unique
+  passwordHash  String
+  passwordPlain String?
+  phone         String
+  email         String?
+  uniqueCode    String   @unique
+  createdAt     DateTime @default(now())
+
+  country       String?
+  Project Project @relation(fields: [projectId], references: [id])
+  Package Package @relation(fields: [packageId], references: [id])
+}
+
+
+model Bot {
+  id        String    @id @default(cuid())
+  projectId String?
+  name      String
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  project   Project?  @relation(fields: [projectId], references: [id])
+  pages     BotPage[]
+}
+
+model BotPage {
+  id        String   @id @default(cuid())
+  botId     String
+  version   Int      @default(1)
+  html      String
+  createdAt DateTime @default(now())
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, version])
+}
+
+model Audit {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  oldValues  String?
+  newValues  String?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+}
