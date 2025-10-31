@@ -1,52 +1,53 @@
-import { NextResponse, type NextRequest } from "next/server";
+// middleware.ts
+import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_COOKIE = "adminSession";
-const BOTS_COOKIE = "bots_admin";
-
-const PUBLIC_PATHS = [
-  "/_next/",
-  "/api/",
-  "/registrations/",
-  "/bots/",
+const PUBLIC_PREFIXES = [
+  "/login",
   "/admin/bots/login",
   "/admin/bots/logout",
-  "/login",            // must be public
+  "/bots",
+  "/registrations",
+  "/api",
+  "/_next",
   "/favicon.ico",
-  "/robots.txt",
-  "/sitemap.xml"
+  "/images",
+  "/assets",
 ];
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+function isPublic(pathname: string) {
+  // Home should redirect to /login unless already authenticated
+  if (pathname === "/") return false;
+  return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
 
-  // Public allow-list
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
-  if (isPublic) {
-    // Guard only for bots admin sub-app (not public /bots/[slug])
-    if (pathname.startsWith("/admin/bots") && !pathname.endsWith("/login") && !pathname.endsWith("/logout")) {
-      const token = req.cookies.get(BOTS_COOKIE)?.value;
-      if (!token || token !== process.env.BOTS_ADMIN_TOKEN) {
-        const url = req.nextUrl.clone();
-        url.pathname = "/admin/bots/login";
-        if (pathname !== "/admin/bots/login") url.searchParams.set("next", pathname);
+export function middleware(req: NextRequest) {
+  const { pathname, search } = req.nextUrl;
+
+  // Always allow truly public assets and API (never fetch here!)
+  if (isPublic(pathname)) {
+    // Extra: bots admin gate lives under /admin/bots, handle there
+    if (pathname.startsWith("/admin/bots") && !pathname.startsWith("/admin/bots/login")) {
+      const token = req.cookies.get("bots_admin")?.value;
+      if (token !== process.env.BOTS_ADMIN_TOKEN) {
+        const url = new URL("/admin/bots/login", req.url);
         return NextResponse.redirect(url);
       }
     }
     return NextResponse.next();
   }
 
-  // Private admin area
-  const admin = req.cookies.get(ADMIN_COOKIE)?.value;
-  if (!admin) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
+  // Private admin area: require adminSession
+  const session = req.cookies.get("adminSession")?.value;
+  if (!session) {
+    const url = new URL("/login", req.url);
+    url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
+// Match everything except static files Next already excludes
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
