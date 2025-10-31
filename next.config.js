@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
   experimental: { typedRoutes: true },
-  eslint: { dirs: ["app", "components", "lib"] }
+  output: "standalone",
+  reactStrictMode: true,
 };
-export default nextConfig;
+module.exports = nextConfig;
