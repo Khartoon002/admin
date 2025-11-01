@@ -1,7 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+// next.config.js  (only if you keep .js)
+export default {
   experimental: { typedRoutes: true },
-  output: "standalone",
   reactStrictMode: true,
+  output: 'standalone',
 };
-module.exports = nextConfig;
